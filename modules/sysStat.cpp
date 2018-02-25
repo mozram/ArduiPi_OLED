@@ -166,6 +166,12 @@ void drawTextSmall(const char * text, uint8_t line)
     // display.display();
 }
 
+void drawHorizontalBar(float value, float maxValue)
+{
+	uint16_t percent = (uint16_t)((value/maxValue) * 100.0);
+	display.drawHorizontalBargraph(0,16, (int16_t) display.width(),8,1, percent);
+}
+
 void printOled()
 {
     display.display();
@@ -195,22 +201,39 @@ void getMemInfo(uint8_t line)
 {
 	FILE *fp;
   	char path[1024];
+	char mem[21];
+	char memTotal[21];
+	char buff[21];
 
 	/* Open the command for reading. */
 	fp = popen("cat /proc/meminfo | grep MemAvailable:", "r");
 	if (fp == NULL) {
 		drawTextSmall("Failed to run command\n", line);
 	}
-
 	/* Read the output a line at a time - output it. */
 	while (fgets(path, sizeof(path)-1, fp) != NULL) {
-		char mem[21];
-		memcpy(mem, &path[18], 20);
-		drawTextSmall(mem, line);
+		memcpy(mem, &path[18], 6);
 	}
-
-	/* close */
 	pclose(fp);
+
+	/* Open the command for reading. */
+	fp = popen("cat /proc/meminfo | grep MemTotal:", "r");
+	if (fp == NULL) {
+		drawTextSmall("Failed to run command\n", line);
+	}
+	/* Read the output a line at a time - output it. */
+	while (fgets(path, sizeof(path)-1, fp) != NULL) {
+		memcpy(memTotal, &path[18], 6);
+	}
+	pclose(fp);
+
+	memcpy(buff, mem, 6);
+	memcpy(&buff[6], "/", 1);
+	memcpy(&buff[7], memTotal, 6);
+	memcpy(&buff[13], " kB free", 8);
+
+	drawTextSmall(buff, line);
+	drawHorizontalBar((float)atoi(memTotal) - (float)atoi(mem), (float)atoi(memTotal));
 }
 
 /* ======================================================================
@@ -262,19 +285,15 @@ int main(int argc, char **argv)
 
 	}
 
-    //display.clearDisplay();
-
 	while(1)
 	{
 		display.clearDisplay();
 		getTemp(1);
 		getMemInfo(2);
+		drawText("cr1tikal", 2, 0, 32);
+		// drawHorizontalBar(10,100);
 		
 		printOled();
 		sleep(1);
 	}
-
-    // char tet[50] = "Test 1234";
-    // drawTextSmall(tet, 1);
-    // printOled();
 }
