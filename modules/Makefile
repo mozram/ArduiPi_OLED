@@ -29,7 +29,7 @@ endif
 prefix := /usr/local
 
 # define all programs
-PROGRAMS = sysStat
+PROGRAMS = billboard
 SOURCES = ${PROGRAMS:=.cpp}
 
 all: ${PROGRAMS}
